@@ -96,15 +96,23 @@ def submit():
     existing_response = supabase.table("submissions").select("id, filename").eq("student_id", student_id_db).eq("course_id", course_id_int).execute()
     existing = existing_response.data[0] if existing_response.data else None
 
-    # Get course name
+    # Get course info
     course_response = supabase.table("courses").select("name").eq("id", course_id_int).execute()
-    course_name = course_response.data[0]["name"]
-
+    course = course_response.data[0] if course_response.data else None
+    
+    if not course:
+        flash("课程不存在", "error")
+        return redirect(url_for("index"))
+    
+    course_name = course["name"]
+    # Use course_id as folder name to avoid Chinese characters in path
+    course_folder = f"course_{course_id_int}"
+    
     # Upload file to Supabase Storage
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
     safe_filename = secure_filename(file.filename)
     filename = f"{student_id_original}_{timestamp}_{safe_filename}"
-    file_path = f"{course_name}/{filename}"
+    file_path = f"{course_folder}/{filename}"
     
     # Read file content
     file_content = file.read()
