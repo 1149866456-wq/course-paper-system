@@ -310,13 +310,12 @@ def download_course(course_id):
 
 # ==================== 初始化 ====================
 
-if __name__ == "__main__":
-    # Initialize database if not exists
+# Initialize database on app startup (for production)
+with app.app_context():
     if not os.path.exists(DATABASE):
         init_db()
         print("Database initialized!")
-
-    # Create upload directory
     os.makedirs(app.config["UPLOAD_FOLDER"], exist_ok=True)
 
+if __name__ == "__main__":
     app.run(debug=True, host="0.0.0.0", port=5000)
