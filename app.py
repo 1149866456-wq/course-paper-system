@@ -141,14 +141,12 @@ def index():
 @app.route("/submit", methods=["POST"])
 def submit():
     name = request.form.get("name", "").strip()
-    student_id = request.form.get("student_id", "").strip()
     course_id = request.form.get("course_id", "").strip()
-    title = request.form.get("title", "").strip()
     file = request.files.get("file")
 
     # Validation
-    if not all([name, student_id, course_id, title, file]):
-        flash("请填写所有字段并上传文件", "error")
+    if not all([name, course_id, file]):
+        flash("请填写姓名、选择课程并上传文件", "error")
         return redirect(url_for("index"))
 
     if not allowed_file(file.filename):
@@ -157,17 +155,18 @@ def submit():
 
     db = get_db()
 
-    # Verify student exists
+    # Verify student exists by name only
     student = db.execute(
-        "SELECT id FROM students WHERE name = ? AND student_id = ?",
-        (name, student_id),
+        "SELECT id, student_id FROM students WHERE name = ?",
+        (name,),
     ).fetchone()
 
     if not student:
-        flash("姓名或学号不正确，请核对后重试", "error")
+        flash("姓名不存在，请核对后重试", "error")
         return redirect(url_for("index"))
 
     student_id_db = student["id"]
+    student_id_original = student["student_id"]
     course_id_int = int(course_id)
 
     # Check duplicate submission
@@ -188,12 +187,13 @@ def submit():
 
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
     safe_filename = secure_filename(file.filename)
-    filename = f"{student_id}_{timestamp}_{safe_filename}"
+    filename = f"{student_id_original}_{timestamp}_{safe_filename}"
     filepath = os.path.join(upload_dir, filename)
     file.save(filepath)
 
-    # Save to database
+    # Save to database (title is auto-generated from filename)
     submit_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    title = os.path.splitext(safe_filename)[0]
     db.execute(
         "INSERT INTO submissions (student_id, course_id, title, filename, submit_time) VALUES (?, ?, ?, ?, ?)",
         (student_id_db, course_id_int, title, filename, submit_time),
