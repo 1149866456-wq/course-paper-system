@@ -81,7 +81,7 @@ def submit():
         return redirect(url_for("index"))
 
     # Verify student exists by name only
-    student_response = supabase.table("students").select("id, student_id").eq("name", name).execute()
+    student_response = supabase.table("students").select("id, name").eq("name", name).execute()
     
     if not student_response.data:
         flash("姓名不存在，请核对后重试", "error")
@@ -89,7 +89,7 @@ def submit():
 
     student = student_response.data[0]
     student_id_db = student["id"]
-    student_id_original = student["student_id"]
+    student_id_original = str(student["id"]).zfill(8)  # 用 id 填充为8位数字
     course_id_int = int(course_id)
 
     # Check if existing submission (for overwrite)
