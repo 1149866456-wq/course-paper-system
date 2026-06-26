@@ -135,7 +135,20 @@ def allowed_file(filename):
 def index():
     db = get_db()
     courses = db.execute("SELECT * FROM courses").fetchall()
-    return render_template("upload.html", courses=courses)
+    
+    # Get submitted courses for the given name (if provided)
+    name = request.args.get("name", "").strip()
+    submitted_courses = set()
+    if name:
+        student = db.execute("SELECT id FROM students WHERE name = ?", (name,)).fetchone()
+        if student:
+            submissions = db.execute(
+                "SELECT course_id FROM submissions WHERE student_id = ?",
+                (student["id"],)
+            ).fetchall()
+            submitted_courses = {sub["course_id"] for sub in submissions}
+    
+    return render_template("upload.html", courses=courses, submitted_courses=submitted_courses, name=name)
 
 
 @app.route("/submit", methods=["POST"])
@@ -169,15 +182,11 @@ def submit():
     student_id_original = student["student_id"]
     course_id_int = int(course_id)
 
-    # Check duplicate submission
+    # Check if existing submission (for overwrite)
     existing = db.execute(
-        "SELECT id FROM submissions WHERE student_id = ? AND course_id = ?",
+        "SELECT id, filename FROM submissions WHERE student_id = ? AND course_id = ?",
         (student_id_db, course_id_int),
     ).fetchone()
-
-    if existing:
-        flash("您已提交过该课程的论文，请勿重复提交", "error")
-        return redirect(url_for("index"))
 
     # Save file
     course = db.execute("SELECT name FROM courses WHERE id = ?", (course_id_int,)).fetchone()
@@ -194,13 +203,28 @@ def submit():
     # Save to database (title is auto-generated from filename)
     submit_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     title = os.path.splitext(safe_filename)[0]
-    db.execute(
-        "INSERT INTO submissions (student_id, course_id, title, filename, submit_time) VALUES (?, ?, ?, ?, ?)",
-        (student_id_db, course_id_int, title, filename, submit_time),
-    )
-    db.commit()
 
-    flash("论文提交成功！", "success")
+    if existing:
+        # Delete old file
+        old_filename = existing["filename"]
+        old_filepath = os.path.join(upload_dir, old_filename)
+        if os.path.exists(old_filepath):
+            os.remove(old_filepath)
+        # Update existing record
+        db.execute(
+            "UPDATE submissions SET title = ?, filename = ?, submit_time = ? WHERE id = ?",
+            (title, filename, submit_time, existing["id"]),
+        )
+        flash("论文已更新覆盖！", "success")
+    else:
+        # Insert new record
+        db.execute(
+            "INSERT INTO submissions (student_id, course_id, title, filename, submit_time) VALUES (?, ?, ?, ?, ?)",
+            (student_id_db, course_id_int, title, filename, submit_time),
+        )
+        flash("论文提交成功！", "success")
+
+    db.commit()
     return redirect(url_for("index"))
 
 

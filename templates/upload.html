@@ -53,6 +53,35 @@
             color: #888;
             margin-top: 5px;
         }
+        .submitted-badge {
+            color: #28a745;
+            font-weight: 600;
+            margin-left: 5px;
+        }
+        .course-option.submitted {
+            color: #28a745;
+            font-weight: 500;
+        }
+        .status-hint {
+            font-size: 0.9rem;
+            color: #666;
+            margin-top: 10px;
+            padding: 10px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            display: none;
+        }
+        .status-hint.show {
+            display: block;
+        }
+        .status-hint .submitted-count {
+            color: #28a745;
+            font-weight: 600;
+        }
+        .status-hint .pending-count {
+            color: #dc3545;
+            font-weight: 600;
+        }
     </style>
 </head>
 <body>
@@ -70,10 +99,10 @@
             {% endif %}
         {% endwith %}
 
-        <form method="POST" action="/submit" enctype="multipart/form-data">
+        <form method="POST" action="/submit" enctype="multipart/form-data" id="submitForm">
             <div class="mb-3">
                 <label class="form-label">姓名</label>
-                <input type="text" class="form-control" name="name" required placeholder="请输入你的姓名">
+                <input type="text" class="form-control" name="name" id="nameInput" required placeholder="请输入你的姓名" value="{{ name }}">
             </div>
             
             <div class="mb-3">
@@ -81,9 +110,26 @@
                 <select class="form-select" name="course_id" required>
                     <option value="">请选择课程</option>
                     {% for course in courses %}
-                    <option value="{{ course.id }}">{{ course.name }}（截止：{{ course.deadline }}）</option>
+                    <option value="{{ course.id }}" class="course-option {% if course.id in submitted_courses %}submitted{% endif %}">
+                        {{ course.name }}（截止：{{ course.deadline }}）
+                        {% if course.id in submitted_courses %}<span class="submitted-badge">✓ 已提交</span>{% endif %}
+                    </option>
                     {% endfor %}
                 </select>
+            </div>
+            
+            <div class="status-hint {% if name %}show{% endif %}" id="statusHint">
+                {% if name %}
+                    {% set submitted_count = submitted_courses|length %}
+                    {% set total_count = courses|length %}
+                    {% set pending_count = total_count - submitted_count %}
+                    <span class="submitted-count">✓ 已提交 {{ submitted_count }} 门</span>
+                    {% if pending_count > 0 %}
+                        <span class="pending-count">，待提交 {{ pending_count }} 门</span>
+                    {% else %}
+                        <span style="color: #28a745;">，全部完成！🎉</span>
+                    {% endif %}
+                {% endif %}
             </div>
             
             <div class="mb-3">
@@ -97,5 +143,25 @@
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Auto-refresh page when name input changes (after a delay)
+        let timeout;
+        const nameInput = document.getElementById('nameInput');
+        
+        nameInput.addEventListener('input', function() {
+            clearTimeout(timeout);
+            timeout = setTimeout(function() {
+                const name = nameInput.value.trim();
+                if (name.length >= 2) {
+                    window.location.href = '/?name=' + encodeURIComponent(name);
+                }
+            }, 800); // 800ms delay after typing stops
+        });
+        
+        // Focus on name input if it's empty
+        if (!nameInput.value.trim()) {
+            nameInput.focus();
+        }
+    </script>
 </body>
 </html>
