@@ -30,7 +30,7 @@ SUPABASE_KEY = os.environ.get("SUPABASE_KEY", "")
 if not SUPABASE_URL:
     SUPABASE_URL = "https://epjphyvnrgvnrosuznyc.supabase.co"
 if not SUPABASE_KEY:
-    SUPABASE_KEY = "eyJhbG...tctk"
+    SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVwanBoeXZucmd2bnJvc3V6bnljIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODI0NzkwMjIsImV4cCI6MjA5ODA1NTAyMn0.rS0o0JKdJVHMWXfHpnyu6DwqEMv0gDk2BWowItFtctk"
 
 supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
 
