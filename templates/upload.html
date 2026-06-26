@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>课程论文提交系统</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        .upload-card {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            padding: 40px;
+            max-width: 500px;
+            width: 100%;
+        }
+        .upload-card h2 {
+            color: #333;
+            margin-bottom: 30px;
+            text-align: center;
+            font-weight: 600;
+        }
+        .form-label {
+            font-weight: 500;
+            color: #555;
+        }
+        .btn-submit {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border: none;
+            border-radius: 10px;
+            padding: 12px;
+            font-weight: 600;
+            width: 100%;
+            margin-top: 10px;
+        }
+        .btn-submit:hover {
+            opacity: 0.9;
+            transform: translateY(-1px);
+        }
+        .alert {
+            border-radius: 10px;
+        }
+        .file-hint {
+            font-size: 0.85rem;
+            color: #888;
+            margin-top: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="upload-card">
+        <h2>📚 课程论文提交</h2>
+        
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ 'danger' if category == 'error' else 'success' }} alert-dismissible fade show" role="alert">
+                        {{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+        <form method="POST" action="/submit" enctype="multipart/form-data">
+            <div class="mb-3">
+                <label class="form-label">姓名</label>
+                <input type="text" class="form-control" name="name" required placeholder="请输入你的姓名">
+            </div>
+            
+            <div class="mb-3">
+                <label class="form-label">学号</label>
+                <input type="text" class="form-control" name="student_id" required placeholder="请输入你的学号">
+            </div>
+            
+            <div class="mb-3">
+                <label class="form-label">课程名称</label>
+                <select class="form-select" name="course_id" required>
+                    <option value="">请选择课程</option>
+                    {% for course in courses %}
+                    <option value="{{ course.id }}">{{ course.name }}（截止：{{ course.deadline }}）</option>
+                    {% endfor %}
+                </select>
+            </div>
+            
+            <div class="mb-3">
+                <label class="form-label">论文标题</label>
+                <input type="text" class="form-control" name="title" required placeholder="请输入论文标题">
+            </div>
+            
+            <div class="mb-3">
+                <label class="form-label">论文文件</label>
+                <input type="file" class="form-control" name="file" required accept=".pdf,.doc,.docx,.zip,.rar">
+                <div class="file-hint">支持 PDF、Word、ZIP、RAR 格式，最大 50MB</div>
+            </div>
+            
+            <button type="submit" class="btn btn-primary btn-submit">提交论文</button>
+        </form>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
