@@ -25,6 +25,13 @@ app.config["ADMIN_PASSWORD"] = os.environ.get("ADMIN_PASSWORD", "admin123")
 # Supabase configuration
 SUPABASE_URL = os.environ.get("SUPABASE_URL", "")
 SUPABASE_KEY = os.environ.get("SUPABASE_KEY", "")
+
+# 如果环境变量为空，使用默认值（仅用于本地开发）
+if not SUPABASE_URL:
+    SUPABASE_URL = "https://epjphyvnrgvnrosuznyc.supabase.co"
+if not SUPABASE_KEY:
+    SUPABASE_KEY = "eyJhbG...tctk"
+
 supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
 
 ALLOWED_EXTENSIONS = {"pdf", "doc", "docx", "zip", "rar"}
