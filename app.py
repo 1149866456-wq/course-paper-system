@@ -26,11 +26,18 @@ app.config["ADMIN_PASSWORD"] = os.environ.get("ADMIN_PASSWORD", "admin123")
 SUPABASE_URL = os.environ.get("SUPABASE_URL", "")
 SUPABASE_KEY = os.environ.get("SUPABASE_KEY", "")
 
-# 如果环境变量为空，使用默认值（仅用于本地开发）
-if not SUPABASE_URL:
-    SUPABASE_URL = "https://epjphyvnrgvnrosuznyc.supabase.co"
-if not SUPABASE_KEY:
-    SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVwanBoeXZucmd2bnJvc3V6bnljIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODI0NzkwMjIsImV4cCI6MjA5ODA1NTAyMn0.rS0o0JKdJVHMWXfHpnyu6DwqEMv0gDk2BWowItFtctk"
+# 本地开发时可以从 .env 文件读取
+if not SUPABASE_URL or not SUPABASE_KEY:
+    try:
+        from dotenv import load_dotenv
+        load_dotenv()
+        SUPABASE_URL = os.environ.get("SUPABASE_URL", "")
+        SUPABASE_KEY = os.environ.get("SUPABASE_KEY", "")
+    except ImportError:
+        pass
+
+if not SUPABASE_URL or not SUPABASE_KEY:
+    raise ValueError("SUPABASE_URL and SUPABASE_KEY must be set as environment variables")
 
 supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
 
